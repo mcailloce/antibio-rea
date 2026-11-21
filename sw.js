@@ -1,5 +1,5 @@
 // Cache hors-ligne. Incrémenter VERSION à chaque mise à jour des fichiers.
-const VERSION = "antibio-rea-v7";
+const VERSION = "antibio-rea-v8";
 const FILES = ["./", "./index.html", "./data.enc.js", "./manifest.json", "./icon-192.png", "./icon-512.png"];
 
 self.addEventListener("install", e => {

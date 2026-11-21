@@ -260,12 +260,14 @@ function renderSyn(dfg){
 }
 
 // Concentrations Stabilis lisibles : associations « a / b » détaillées, « a >> b » = plage, « a et b » = 2 concentrations étudiées
-const COMBO = {amoxclav:["amoxicilline","ac. clavulanique"], piptazo:["pipéracilline","tazobactam"], bactrim:["sulfaméthoxazole","triméthoprime"]};
+const COMBO = {amoxclav:["amoxicilline","ac. clavulanique"], piptazo:["pipéracilline","tazobactam"], bactrim:["sulfaméthoxazole","triméthoprime"], ceftolozane_tazo:["ceftolozane","tazobactam"], ceftazidime_avi:["ceftazidime","avibactam"], meropeneme_vabor:["méropénème","vaborbactam"]};
 function fmtConc(conc, id){
   let c = String(conc || "").replace(/(\d)\.(\d)/g, "$1,$2").replace(/\s+/g, " ").trim();
   const u = (c.match(/\s*(mg|µg|g)\/mL$/i) || ["", "mg"])[1] + "/mL";
   const v = c.replace(/\s*(mg|µg|g)\/mL$/i, "");
-  let m = v.match(/^([\d,]+)\s*>>\s*([\d,]+)$/);
+  let m = v.match(/^([\d,]+)\s*\/\s*([\d,]+)\s*>>\s*([\d,]+)\s*\/\s*([\d,]+)$/);
+  if (m && COMBO[id]) return `${COMBO[id][0]} de ${m[1]} à ${m[3]} ${u} + ${COMBO[id][1]} de ${m[2]} à ${m[4]} ${u}`;
+  m = v.match(/^([\d,]+)\s*>>\s*([\d,]+)$/);
   if (m) return `de ${m[1]} à ${m[2]} ${u}`;
   m = v.match(/^([\d,]+)\s*\/\s*([\d,]+)$/);
   if (m && COMBO[id]) return `${COMBO[id][0]} ${m[1]} ${u} + ${COMBO[id][1]} ${m[2]} ${u}`;
