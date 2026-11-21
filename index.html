@@ -30,6 +30,9 @@
   .chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 13px;font-size:.95rem;cursor:pointer;text-align:left}
   .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .chips.sub{margin-top:10px}
+  .seg.cls{margin-bottom:0}
+  .seg.cls button{padding:12px 4px;font-weight:600}
+  #drugs:not(.hidden){margin-top:12px}
   .cat{flex-basis:100%;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:6px}
   tr.cathead td{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--accent2);font-weight:700;padding-top:14px;border-bottom:1px solid var(--line)}
   .chips.sub .chip{border-radius:10px;font-size:.88rem;padding:7px 10px}
@@ -134,7 +137,7 @@
   </section>
 
   <section class="card">
-    <h2>Molécule</h2>
+    <div class="seg cls" id="cls"></div>
     <div class="chips" id="drugs"></div>
     <div class="chips sub" id="fiches"></div>
   </section>
@@ -170,9 +173,10 @@ const PROF = {1:"Non dialysé", 2:"Hémodialyse", 4:"EER continue (HVVC / HDVVC 
 
 // ---------- État ----------
 const S = { prof:"1", meth:"saisie", dfg:"", pcr:"", age:"", sexe:"H", ucr:"", uvol:"", udur:"24", pcr2:"",
-            drug:"_syn", fiche:{} };
+            drug:"", cls:"", fiche:{} };
 try { Object.assign(S, JSON.parse(localStorage.getItem("antibioRea") || "{}")); } catch(e){}
 if (!PROF[S.prof]) S.prof = "1";
+if (S.drug === "_syn") S.drug = "";
 const save = () => { try { localStorage.setItem("antibioRea", JSON.stringify(S)); } catch(e){} };
 
 // ---------- Outils ----------
@@ -225,11 +229,13 @@ function renderStatic(){
   $("dial").textContent = "Profil : " + PROF[S.prof] + ".";
   ["saisie","ckd","urin"].forEach(m => $("m-"+m).classList.toggle("hidden", S.meth !== m));
   ["dfg","pcr","age","ucr","uvol","udur","pcr2"].forEach(id => { if (document.activeElement !== $(id)) $(id).value = S[id]; });
-  $("drugs").innerHTML = `<button class="chip ${S.drug==="_syn"?"on":""}" data-d="_syn">Synthèse</button>` +
-    catsUsed().map(c => `<div class="cat">${c}</div>` + D.drugs.filter(d => catOf(d) === c)
-      .map(d => `<button class="chip ${d.id===S.drug?"on":""}" data-d="${d.id}">${esc(d.name)}</button>`).join("")).join("");
+  $("cls").innerHTML = catsUsed().map(c =>
+    `<button data-c="${c}" class="${c===S.cls?"on":""}">${c}</button>`).join("");
+  const list = D.drugs.filter(d => catOf(d) === S.cls);
+  $("drugs").classList.toggle("hidden", !list.length);
+  $("drugs").innerHTML = list.map(d => `<button class="chip ${d.id===S.drug?"on":""}" data-d="${d.id}">${esc(d.name)}</button>`).join("");
   const drug = D.drugs.find(d => d.id === S.drug);
-  if (drug && drug.fiches.length > 1){
+  if (drug && drug.fiches.length > 1 && catOf(drug) === S.cls){
     const sel = ficheSel(drug);
     $("fiches").innerHTML = drug.fiches.map(f =>
       `<button class="chip ${f===sel?"on":""}" data-f="${f.id}">${esc(f.label)}</button>`).join("");
@@ -379,7 +385,8 @@ function compute(){
     $("dfgout").innerHTML = t;
   }
   const drug = D.drugs.find(d => d.id === S.drug);
-  $("res").innerHTML = drug ? renderFiche(drug, dfg) : renderSyn(dfg);
+  $("res").classList.toggle("hidden", !drug);
+  $("res").innerHTML = drug ? renderFiche(drug, dfg) : "";
   save();
 }
 
@@ -387,6 +394,11 @@ function compute(){
 $("prof").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; S.prof = b.dataset.p; renderStatic(); compute(); });
 $("meth").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (!b) return; S.meth = b.dataset.m; renderStatic(); compute(); });
 $("sexe").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; S.sexe = b.dataset.s; renderStatic(); compute(); });
+$("cls").addEventListener("click", e => { const b = e.target.closest("[data-c]"); if (!b) return;
+  const c = b.dataset.c; S.cls = S.cls === c ? "" : c;
+  const cur = D.drugs.find(d => d.id === S.drug);
+  if (S.cls && cur && catOf(cur) !== S.cls) S.drug = "";
+  renderStatic(); compute(); });
 $("drugs").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b) return; S.drug = b.dataset.d; renderStatic(); compute(); });
 $("fiches").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; S.fiche[S.drug] = b.dataset.f; renderStatic(); compute(); });
 $("res").addEventListener("click", e => { const r = e.target.closest("tr[data-d]"); if (!r) return; S.drug = r.dataset.d; renderStatic(); compute(); window.scrollTo({top:0, behavior:"smooth"}); });
@@ -394,6 +406,7 @@ $("res").addEventListener("click", e => { const r = e.target.closest("tr[data-d]
 
 function boot(data){
   D = data;
+  { const cur = D.drugs.find(d => d.id === S.drug); if (!cur) S.drug = ""; else if (!S.cls) S.cls = catOf(cur); }
   $("lock").classList.add("hidden"); $("app").classList.remove("hidden");
   $("foot").innerHTML = `Sources : Vidal GPR (groupe SiteGPR-SPILF), consulté le ${esc(D.consultation)} · Stabilis (<a href="https://www.stabilis.org" target="_blank" rel="noopener">stabilis.org</a>), consulté le ${esc(D.stabConsult || D.consultation)}.<br>Aide à la prescription — vérifier sur la fiche GPR et Stabilis en cas de doute.`;
   renderStatic(); compute();
