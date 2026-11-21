@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Antibio Réa</title>
+<meta name="theme-color" content="#0b5c4a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+  :root{
+    --bg:#f2f6f5; --card:#fff; --ink:#13231f; --muted:#5a6d68; --line:#d6e2de;
+    --accent:#0b5c4a; --accent2:#13866b; --hl:#e3f3ee; --ok:#0b7a4b; --warn:#a35b00;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#0e1614; --card:#172320; --ink:#e5efec; --muted:#93a8a2; --line:#28403a;
+      --accent:#4fd1ad; --accent2:#4fd1ad; --hl:#1b3a32; --ok:#4fd19a; --warn:#f0a94b; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);
+    padding:env(safe-area-inset-top) 0 calc(24px + env(safe-area-inset-bottom));}
+  header{background:#0b5c4a;color:#fff;padding:14px 16px;font-weight:700;font-size:1.15rem;letter-spacing:.2px}
+  header small{font-weight:400;opacity:.8;font-size:.8rem;margin-left:6px}
+  main{max-width:600px;margin:0 auto;padding:12px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 10px}
+  h3{font-size:.85rem;color:var(--muted);margin:14px 0 6px;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:8px 13px;font-size:.95rem;cursor:pointer;text-align:left}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .chips.sub{margin-top:10px}
+  .cat{flex-basis:100%;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-top:6px}
+  tr.cathead td{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--accent2);font-weight:700;padding-top:14px;border-bottom:1px solid var(--line)}
+  .chips.sub .chip{border-radius:10px;font-size:.88rem;padding:7px 10px}
+  @media (prefers-color-scheme: dark){ .chip.on,.seg button.on{color:#0e1614} }
+  .row{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px}
+  .row:last-child{margin-bottom:0}
+  label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+  .f{flex:1;min-width:0}
+  input,select{width:100%;font-size:1.2rem;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+  input:focus,select:focus{outline:2px solid var(--accent2);border-color:transparent}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;width:100%;margin-bottom:10px}
+  .seg button{flex:1;border:0;background:transparent;color:var(--ink);padding:10px 6px;font-size:.9rem;cursor:pointer;line-height:1.15}
+  .seg button+button{border-left:1px solid var(--line)}
+  .seg button.on{background:var(--accent);color:#fff}
+  .dfgout{font-size:.95rem;color:var(--muted);margin-top:4px}
+  .dfgout b{color:var(--ink);font-size:1.1rem}
+  .big{font-size:1.35rem;font-weight:700;color:var(--ok);margin:4px 0 2px;line-height:1.3}
+  .profile{font-size:.85rem;color:var(--muted)}
+  table{width:100%;border-collapse:collapse}
+  td{padding:8px 4px;border-bottom:1px solid var(--line);font-size:.93rem;vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.k{color:var(--muted);width:34%;white-space:nowrap}
+  tr.hl td{background:var(--hl);font-weight:600}
+  .txt{font-size:.93rem;line-height:1.45;white-space:pre-line}
+  .msg{color:var(--muted);font-size:.95rem}
+  .warn{color:var(--warn);font-size:.9rem}
+  details{border-top:1px solid var(--line);padding-top:8px;margin-top:10px}
+  summary{cursor:pointer;color:var(--accent2);font-size:.9rem;font-weight:600}
+  details.cg{border-top:0;margin-top:4px;padding-top:0}
+  details.cg summary{font-size:.88rem;padding:5px 0}
+  details.cg .txt{padding:2px 0 8px 14px;border-left:2px solid var(--line)}
+  .syn td.n{font-weight:600;width:34%}
+  .syn tr{cursor:pointer}
+  .meta{font-size:.78rem;color:var(--muted);margin-top:10px}
+  .stab{margin-top:10px;padding:9px 11px;border-radius:10px;background:var(--hl);font-size:.92rem;line-height:1.4}
+  .stab .slab{color:var(--muted)}
+  .scav{font-size:.8rem;color:var(--warn);margin-top:3px}
+  details.sdet{border-top:0;margin-top:6px;padding-top:0}
+  table.st th{font-size:.75rem;color:var(--muted);text-align:left;font-weight:600;padding:4px}
+  table.st td{font-size:.85rem}
+  td.k2{color:var(--muted);font-size:.78rem}
+  .muted{color:var(--muted);font-size:.8rem}
+  .foot{font-size:.75rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.4}
+  .hidden{display:none}
+  .lock{max-width:600px;margin:0 auto;padding:12px}
+  .chk{display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--ink);margin:4px 0 12px}
+  .chk input{width:auto}
+  .btn{display:block;width:100%;padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-size:1.05rem;font-weight:600}
+  @media (prefers-color-scheme: dark){ .btn{color:#0e1614} }
+  .link{display:block;margin:6px auto 0;background:none;border:0;color:var(--muted);font-size:.75rem;text-decoration:underline}
+</style>
+</head>
+<body>
+<header>Antibio Réa <small>anti-infectieux · posologies GPR &amp; fonction rénale</small></header>
+<section id="lock" class="lock hidden">
+  <div class="card">
+    <h2>Accès protégé</h2>
+    <div class="row"><div class="f"><label for="pwd">Mot de passe</label>
+      <input id="pwd" type="password" autocomplete="current-password"></div></div>
+    <label class="chk"><input type="checkbox" id="remember" checked> Rester connecté sur cet appareil</label>
+    <button class="btn" id="unlock">Déverrouiller</button>
+    <p class="warn" id="lockmsg"></p>
+  </div>
+</section>
+<main id="app" class="hidden">
+
+  <section class="card">
+    <h2>Fonction rénale</h2>
+    <div class="seg" id="prof">
+      <button data-p="1">Non dialysé</button><button data-p="2">Hémo&shy;dialyse</button><button data-p="4">EER continue</button>
+    </div>
+    <div id="nd">
+      <div class="seg" id="meth">
+        <button data-m="saisie">DFG connu</button><button data-m="ckd">CKD-EPI</button><button data-m="urin">Clairance urinaire</button>
+      </div>
+      <div id="m-saisie">
+        <div class="row"><div class="f"><label for="dfg">DFG (mL/min)</label>
+          <input id="dfg" inputmode="decimal" autocomplete="off" placeholder="ex. 35"></div></div>
+      </div>
+      <div id="m-ckd" class="hidden">
+        <div class="row">
+          <div class="f"><label for="pcr">Créatininémie (µmol/L)</label><input id="pcr" inputmode="decimal" autocomplete="off" placeholder="ex. 180"></div>
+        </div>
+        <div class="row">
+          <div class="f"><label for="age">Âge (ans)</label><input id="age" inputmode="numeric" autocomplete="off" placeholder="ex. 65"></div>
+          <div class="f"><label>Sexe</label><div class="seg" id="sexe" style="margin:0"><button data-s="H">H</button><button data-s="F">F</button></div></div>
+        </div>
+      </div>
+      <div id="m-urin" class="hidden">
+        <div class="row">
+          <div class="f"><label for="ucr">Créatininurie (mmol/L)</label><input id="ucr" inputmode="decimal" autocomplete="off" placeholder="ex. 5,2"></div>
+          <div class="f"><label for="uvol">Volume urinaire (mL)</label><input id="uvol" inputmode="decimal" autocomplete="off" placeholder="ex. 1500"></div>
+        </div>
+        <div class="row">
+          <div class="f"><label for="udur">Durée du recueil (h)</label><input id="udur" inputmode="decimal" autocomplete="off" placeholder="24"></div>
+          <div class="f"><label for="pcr2">Créatininémie (µmol/L)</label><input id="pcr2" inputmode="decimal" autocomplete="off" placeholder="ex. 180"></div>
+        </div>
+      </div>
+      <div class="dfgout" id="dfgout"></div>
+    </div>
+    <div id="dial" class="msg hidden"></div>
+  </section>
+
+  <section class="card">
+    <h2>Molécule</h2>
+    <div class="chips" id="drugs"></div>
+    <div class="chips sub" id="fiches"></div>
+  </section>
+
+  <section class="card" id="res"></section>
+
+  <p class="foot" id="foot"></p>
+  <button class="link" id="logout">Verrouiller (oublier le mot de passe sur cet appareil)</button>
+</main>
+
+<script src="data.enc.js"></script>
+<script>
+"use strict";
+let D = null;
+// ---------- Déchiffrement (AES-GCM, clé dérivée du mot de passe par PBKDF2-SHA256) ----------
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+const KEYSTORE = "antibioReaKey";
+async function deriveKey(pwd){
+  const E = window.ABX_ENC;
+  const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pwd.normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2", salt:b64(E.salt), iterations:E.iter, hash:"SHA-256"},
+    base, {name:"AES-GCM", length:256}, true, ["decrypt"]);
+}
+async function decryptWith(key){
+  const E = window.ABX_ENC;
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(E.iv)}, key, b64(E.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+const CATS = ["Antibiotiques", "Antifongiques", "Antiviraux"];
+const catOf = d => d.cat || "Antibiotiques";
+const catsUsed = () => CATS.filter(c => D.drugs.some(d => catOf(d) === c));
+const PROF = {1:"Non dialysé", 2:"Hémodialyse", 4:"EER continue (HVVC / HDVVC / HDFVVC)"};
+
+// ---------- État ----------
+const S = { prof:"1", meth:"saisie", dfg:"", pcr:"", age:"", sexe:"H", ucr:"", uvol:"", udur:"24", pcr2:"",
+            drug:"_syn", fiche:{} };
+try { Object.assign(S, JSON.parse(localStorage.getItem("antibioRea") || "{}")); } catch(e){}
+if (!PROF[S.prof]) S.prof = "1";
+const save = () => { try { localStorage.setItem("antibioRea", JSON.stringify(S)); } catch(e){} };
+
+// ---------- Outils ----------
+const $ = id => document.getElementById(id);
+const num = s => { const x = parseFloat(String(s).replace(",", ".").replace(/\s/g,"")); return isFinite(x) ? x : NaN; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt = (x, d=0) => isFinite(x) ? x.toLocaleString("fr-FR",{maximumFractionDigits:d}) : "—";
+
+// CKD-EPI 2009, sans coefficient ethnique (mL/min/1,73 m²)
+function ckdepi(pcrUmol, age, sexe){
+  const scr = pcrUmol / 88.4, F = sexe === "F";
+  const k = F ? 0.7 : 0.9, a = F ? -0.329 : -0.411;
+  return 141 * Math.pow(Math.min(scr/k,1), a) * Math.pow(Math.max(scr/k,1), -1.209) * Math.pow(0.993, age) * (F ? 1.018 : 1);
+}
+// Clairance mesurée = U × V / P (mL/min)
+function clUrin(ucrMmol, volMl, durH, pcrUmol){
+  return (ucrMmol * 1000 * volMl) / (pcrUmol * durH * 60);
+}
+function currentDfg(){
+  if (S.meth === "saisie") return num(S.dfg);
+  if (S.meth === "ckd"){ const p = num(S.pcr), a = num(S.age); return p > 0 && a > 0 ? ckdepi(p, a, S.sexe) : NaN; }
+  const u = num(S.ucr), v = num(S.uvol), t = num(S.udur), p = num(S.pcr2);
+  return u > 0 && v > 0 && t > 0 && p > 0 ? clUrin(u, v, t, p) : NaN;
+}
+
+// Posologie pour un profil donné
+function posoFor(f, prof, dfg){
+  if (prof === "2") return {txt: f.hd.poso, com: f.hd.com, key:"hd"};
+  if (prof === "4") return {txt: f.eer.poso, com: f.eer.com, key:"eer"};
+  if (!isFinite(dfg)) return null;
+  if (dfg > 90 || dfg >= f.dfgMax) return {txt: f.usuelle, key:"norm", norm:true};
+  const d = Math.max(dfg, 1);
+  let seg = f.dfg[0];
+  f.dfg.forEach(s => { if (d >= s.min) seg = s; });
+  return {txt: seg.poso, com: seg.com, key:"dfg"+seg.min};
+}
+const fichesOf = drug => drug.fiches;
+function ficheSel(drug){
+  const id = S.fiche[drug.id];
+  return drug.fiches.find(f => String(f.id) === String(id)) || drug.fiches.find(f => f.def) || drug.fiches[0];
+}
+
+// ---------- Rendu ----------
+function renderStatic(){
+  [...$("prof").children].forEach(b => b.classList.toggle("on", b.dataset.p === S.prof));
+  [...$("meth").children].forEach(b => b.classList.toggle("on", b.dataset.m === S.meth));
+  [...$("sexe").children].forEach(b => b.classList.toggle("on", b.dataset.s === S.sexe));
+  $("nd").classList.toggle("hidden", S.prof !== "1");
+  $("dial").classList.toggle("hidden", S.prof === "1");
+  $("dial").textContent = "Profil : " + PROF[S.prof] + ".";
+  ["saisie","ckd","urin"].forEach(m => $("m-"+m).classList.toggle("hidden", S.meth !== m));
+  ["dfg","pcr","age","ucr","uvol","udur","pcr2"].forEach(id => { if (document.activeElement !== $(id)) $(id).value = S[id]; });
+  $("drugs").innerHTML = `<button class="chip ${S.drug==="_syn"?"on":""}" data-d="_syn">Synthèse</button>` +
+    catsUsed().map(c => `<div class="cat">${c}</div>` + D.drugs.filter(d => catOf(d) === c)
+      .map(d => `<button class="chip ${d.id===S.drug?"on":""}" data-d="${d.id}">${esc(d.name)}</button>`).join("")).join("");
+  const drug = D.drugs.find(d => d.id === S.drug);
+  if (drug && drug.fiches.length > 1){
+    const sel = ficheSel(drug);
+    $("fiches").innerHTML = drug.fiches.map(f =>
+      `<button class="chip ${f===sel?"on":""}" data-f="${f.id}">${esc(f.label)}</button>`).join("");
+  } else $("fiches").innerHTML = "";
+}
+
+function profileLine(dfg){
+  if (S.prof !== "1") return PROF[S.prof];
+  return isFinite(dfg) ? `Non dialysé — DFG ${fmt(dfg)} mL/min` : "Non dialysé — DFG non renseigné";
+}
+
+function renderSyn(dfg){
+  const rows = catsUsed().map(c => `<tr class="cathead"><td colspan="2">${c}</td></tr>` + D.drugs.filter(d => catOf(d) === c).map(d => {
+    if (!d.fiches.length) return `<tr data-d="${d.id}"><td class="n">${esc(d.name)}</td><td class="msg">${esc(d.note||"")}</td></tr>`;
+    const f = ficheSel(d), p = posoFor(f, S.prof, dfg);
+    return `<tr data-d="${d.id}"><td class="n">${esc(d.name)}<div class="profile">${esc(f.label)}</div></td>
+      <td>${p ? esc(p.txt) : '<span class="msg">DFG ?</span>'}</td></tr>`;
+  }).join("")).join("");
+  return `<h2>Synthèse</h2><div class="profile">${esc(profileLine(dfg))}</div>
+    <table class="syn" style="margin-top:8px">${rows}</table>
+    <p class="meta">Indication retenue : celle sélectionnée pour chaque molécule (par défaut l'item « infection sévère » ou la plus forte posologie IV). Toucher une ligne pour la fiche détaillée.</p>`;
+}
+
+function stabNote(s){
+  if (!s) return "";
+  const c = s.cont;
+  const note = c ? `${c.ok ? "" : "≈ "}${esc(c.min)} <span class="slab">(${esc(c.cmin)})</span>${c.max ? ` · jusqu’à ${esc(c.max)} selon concentration` : ""}` : "pas de donnée";
+  return `<div class="stab"><span class="slab">Stabilité seringue PP · 25 °C · lumière :</span> <b>${note}</b>${c && c.cav ? `<div class="scav">Donnée approchée : ${esc(c.cav)}</div>` : ""}</div>`;
+}
+function stabDetails(s){
+  if (!s) return "";
+  const tbl = (m, title) => {
+    if (!m) return `<h3>${title}</h3><p class="msg">Pas de donnée Stabilis exploitable (NaCl 0,9 % ou G5 %, 20–28 °C).</p>`;
+    const showCont = m.cav && /contenant/.test(m.cav);
+    return `<h3>${title}</h3>${m.cav ? `<p class="warn">Donnée approchée : ${esc(m.cav)}</p>` : ""}<table class="st"><tr><th>Concentration</th><th>Soluté</th><th>Durée</th><th>Conditions</th></tr>` +
+      m.rows.map(r => `<tr><td>${esc(r.conc)}</td><td>${esc(r.solv)}</td><td><b>${esc(r.dur)}</b></td><td class="k2">${esc(r.temp)} · ${esc(r.light)}${showCont ? " · " + esc(r.cont) : ""} · réf. ${esc(r.ref)}${r.niv ? " (" + esc(r.niv) + ")" : ""}</td></tr>`).join("") + `</table>`;
+  };
+  const inc = s.inc && s.inc.length
+    ? `<div class="txt">${s.inc.map(x => esc(x.p) + (x.t ? ` <span class="muted">(${esc(x.t)})</span>` : "") + (x.d ? "*" : "")).join(" · ")}</div><p class="meta">* résultats discordants : compatible dans d’autres études.</p>`
+    : `<p class="msg">Aucune incompatibilité répertoriée.</p>`;
+  return `<details class="sdet"><summary>Stabilité et incompatibilités (Stabilis)</summary>${tbl(s.cont, "Perfusion continue — seringue polypropylène")}${tbl(s.disc, "Perfusion discontinue — poche PVC")}<h3>Incompatibilités en Y</h3>${inc}<p class="meta">Source : Stabilis (stabilis.org), monographie(s) n° ${esc(s.src.join(", "))}, consulté le ${esc(D.stabConsult || "")}. Critères : 20–28 °C, exposition à la lumière, NaCl 0,9 % ou G5 %. Niveau de preuve Stabilis entre parenthèses.</p></details>`;
+}
+// ---------- Commentaires GPR regroupés par thème ----------
+const COMCATS = [["reco","Recommandations"],["pk","Données PK"],["irc","Insuffisance rénale chronique"],["hd","Hémodialyse"],["eer","Épuration extrarénale continue"],["autre","Autres données"]];
+function catHead(h){
+  h = h.toLowerCase();
+  if (/recommand|conclusion/.test(h)) return "reco";
+  if (/péritonéale|dpca/.test(h)) return "dpca";
+  if (/continue|crrt|cvvh|pirrt|prolongée|extra-?rénale/.test(h)) return "eer";
+  if (/hémodialyse|\bhd\b|^dialyse/.test(h)) return "hd";
+  if (/chronique|\birc\b|\bmrc\b/.test(h)) return "irc";
+  if (/\bpk\b|pk-pd|normo/.test(h)) return "pk";
+  return null;
+}
+function catPara(p){
+  const t = p.toLowerCase(), n = re => (t.match(re) || []).length;
+  const eerHit = n(/hdvvc|hvvc|hdfvvc|cvvh\w*|crrt|épuration extra[- ]?rénale continue|epuration extra[- ]?rénale continue|hémofiltration|pirrt/g);
+  const hdHit = n(/hémodialyse|\bhd\b|\bhdi\b|séance/g);
+  if (/péritonéale|dpca/.test(t) && !hdHit && !eerHit) return "dpca";
+  const sc = {
+    pk: n(/demi-vie|protéines plasmatiques|excrét|métabolis|volume de distribution|pharmacocinét|\bpk\b|biodisponib/g),
+    irc: n(/insuffisan\w* rénal|\birc\b|\bmrc\b|\bdfg\w*|clcr|clairance de la créatinine|adapter la posologie|adaptation (de la )?posolog/g),
+    hd: hdHit, eer: eerHit
+  };
+  let best = "reco", bv = 0;
+  for (const k of ["pk","irc","hd","eer"]) if (sc[k] > bv){ bv = sc[k]; best = k; }
+  return best;
+}
+function comGroups(txt){
+  const G = {}; const add = (k, s) => { if (!s || k === "dpca") return; (G[k] = G[k] || []).push(s); };
+  const parts = txt.split(/\n(?=\s*\d{1,2}\s*[.)]\s+\S)/);
+  const structured = parts.length > 2;
+  parts.forEach((part, i) => {
+    const m = part.match(/^\s*\d{1,2}\s*[.)]\s+([^\n]*)\n?([\s\S]*)$/);
+    if (structured && m){
+      const k = catHead(m[1]);
+      if (k) add(k, m[2].trim());
+      else add("autre", (m[1].replace(/\s*\[[^\]]*\]\s*/g, " ").trim() + "\n" + m[2]).trim());
+    } else {
+      part.split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(p => add(catPara(p), p));
+    }
+  });
+  return G;
+}
+function comBlock(txt){
+  if (!txt) return "";
+  if (txt.length < 450) return block("Commentaires GPR", txt);
+  const G = comGroups(txt);
+  const keys = COMCATS.filter(([k]) => G[k] && G[k].length);
+  if (!keys.length) return "";
+  return `<h3>Commentaires GPR</h3>` + keys.map(([k, l]) =>
+    `<details class="cg"${k === "reco" ? " open" : ""}><summary>${l}</summary><div class="txt">${esc(G[k].join("\n"))}</div></details>`).join("");
+}
+function block(title, txt){ return txt ? `<h3>${title}</h3><div class="txt">${esc(txt)}</div>` : ""; }
+
+function renderFiche(drug, dfg){
+  if (!drug.fiches.length) return `<h2>${esc(drug.name)}</h2><p class="msg">${esc(drug.note||"")}</p>`;
+  const f = ficheSel(drug), p = posoFor(f, S.prof, dfg);
+  const tiers = f.dfg.map((s, i) => {
+    const max = i < f.dfg.length - 1 ? f.dfg[i+1].min : f.dfgMax;
+    const lab = i === 0 ? `< ${max}` : `${s.min} – ${max - 1}`;
+    return {k:"dfg"+s.min, lab: `DFG ${lab}`, poso: s.poso};
+  });
+  tiers.push({k:"norm", lab: f.dfgMax >= 91 ? "DFG > 90" : `DFG ≥ ${f.dfgMax}`, poso: f.usuelle});
+  tiers.reverse();
+  tiers.push({k:"hd", lab:"Hémodialyse", poso:f.hd.poso}, {k:"eer", lab:"EER continue", poso:f.eer.poso});
+  const tbl = `<table>${tiers.map(t => `<tr class="${p && p.key===t.k ? "hl":""}"><td class="k">${esc(t.lab)}</td><td>${esc(t.poso)}</td></tr>`).join("")}</table>`;
+  const comProf = p && p.com && p.com !== f.com ? block("Commentaire spécifique à ce profil", p.com) : "";
+  const pk = [["Dialysance (hémodialyse)", f.dialysance], ["Coefficient d’extraction", f.extraction], ["Clairance d’hémodialyse", f.clhd], ["Fhd", f.fhd]]
+    .filter(x => x[1]).map(x => `<tr><td class="k">${x[0]}</td><td>${esc(x[1])}</td></tr>`).join("");
+  return `<h2>${esc(drug.name)}</h2>
+    <div class="profile">${esc(f.label)}${f.voie ? " · " + esc(f.voie) : ""}</div>
+    <div class="profile" style="margin-top:6px">${esc(profileLine(dfg))}</div>
+    <div class="big">${p ? esc(p.txt) : "Renseigner la fonction rénale"}</div>
+    ${comProf}
+    ${stabNote(drug.stab)}${stabDetails(drug.stab)}
+    ${block("Posologie usuelle (adulte normorénal)", f.usuelle)}
+    <h3>Adaptation selon la fonction rénale</h3>${tbl}
+    ${block("Moment d’administration / dialyse (chronoposologie)", f.chrono)}
+    ${comBlock(f.com)}
+    <details><summary>Surdosage et données d’épuration</summary>
+      ${block("Effets indésirables liés à un surdosage", f.surdosage)}
+      ${pk ? `<h3>Épuration extrarénale</h3><table>${pk}</table>` : ""}
+    </details>
+    <p class="meta">Fiche GPR mise à jour le ${esc(f.maj || "—")} · consultée sur Vidal GPR le ${esc(D.consultation)}</p>`;
+}
+
+function compute(){
+  const dfg = S.prof === "1" ? currentDfg() : NaN;
+  if (S.prof === "1"){
+    let t = "";
+    if (S.meth === "ckd") t = isFinite(dfg) ? `DFG CKD-EPI : <b>${fmt(dfg)}</b> mL/min/1,73 m²` : "Renseigner créatininémie, âge et sexe.";
+    if (S.meth === "urin") t = isFinite(dfg) ? `Clairance mesurée (U×V/P) : <b>${fmt(dfg)}</b> mL/min` : "Renseigner créatininurie, volume, durée et créatininémie.";
+    if (S.meth === "saisie" && !isFinite(dfg)) t = "Saisir le DFG.";
+    $("dfgout").innerHTML = t;
+  }
+  const drug = D.drugs.find(d => d.id === S.drug);
+  $("res").innerHTML = drug ? renderFiche(drug, dfg) : renderSyn(dfg);
+  save();
+}
+
+// ---------- Événements ----------
+$("prof").addEventListener("click", e => { const b = e.target.closest("[data-p]"); if (!b) return; S.prof = b.dataset.p; renderStatic(); compute(); });
+$("meth").addEventListener("click", e => { const b = e.target.closest("[data-m]"); if (!b) return; S.meth = b.dataset.m; renderStatic(); compute(); });
+$("sexe").addEventListener("click", e => { const b = e.target.closest("[data-s]"); if (!b) return; S.sexe = b.dataset.s; renderStatic(); compute(); });
+$("drugs").addEventListener("click", e => { const b = e.target.closest("[data-d]"); if (!b) return; S.drug = b.dataset.d; renderStatic(); compute(); });
+$("fiches").addEventListener("click", e => { const b = e.target.closest("[data-f]"); if (!b) return; S.fiche[S.drug] = b.dataset.f; renderStatic(); compute(); });
+$("res").addEventListener("click", e => { const r = e.target.closest("tr[data-d]"); if (!r) return; S.drug = r.dataset.d; renderStatic(); compute(); window.scrollTo({top:0, behavior:"smooth"}); });
+["dfg","pcr","age","ucr","uvol","udur","pcr2"].forEach(id => $(id).addEventListener("input", e => { S[id] = e.target.value; compute(); }));
+
+function boot(data){
+  D = data;
+  $("lock").classList.add("hidden"); $("app").classList.remove("hidden");
+  $("foot").innerHTML = `Sources : Vidal GPR (groupe SiteGPR-SPILF), consulté le ${esc(D.consultation)} · Stabilis (<a href="https://www.stabilis.org" target="_blank" rel="noopener">stabilis.org</a>), consulté le ${esc(D.stabConsult || D.consultation)}.<br>Aide à la prescription — vérifier sur la fiche GPR et Stabilis en cas de doute.`;
+  renderStatic(); compute();
+}
+function showLock(msg){
+  $("app").classList.add("hidden"); $("lock").classList.remove("hidden");
+  $("lockmsg").textContent = msg || ""; $("pwd").value = "";
+}
+async function tryUnlock(){
+  $("lockmsg").textContent = "Vérification…";
+  try {
+    const key = await deriveKey($("pwd").value);
+    const data = await decryptWith(key);
+    if ($("remember").checked){
+      const raw = await crypto.subtle.exportKey("raw", key);
+      try { localStorage.setItem(KEYSTORE, btoa(String.fromCharCode(...new Uint8Array(raw)))); } catch(e){}
+    }
+    boot(data);
+  } catch(e){ $("lockmsg").textContent = "Mot de passe incorrect."; }
+}
+$("unlock").addEventListener("click", tryUnlock);
+$("pwd").addEventListener("keydown", e => { if (e.key === "Enter") tryUnlock(); });
+$("logout").addEventListener("click", () => { try { localStorage.removeItem(KEYSTORE); } catch(e){} D = null; showLock(); });
+(async () => {
+  let stored = null; try { stored = localStorage.getItem(KEYSTORE); } catch(e){}
+  if (stored){
+    try {
+      const key = await crypto.subtle.importKey("raw", b64(stored), {name:"AES-GCM"}, false, ["decrypt"]);
+      boot(await decryptWith(key)); return;
+    } catch(e){ try { localStorage.removeItem(KEYSTORE); } catch(_){} }
+  }
+  showLock();
+})();
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
