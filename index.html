@@ -253,24 +253,36 @@ function renderSyn(dfg){
     <p class="meta">Indication retenue : celle sélectionnée pour chaque molécule (par défaut l'item « infection sévère » ou la plus forte posologie IV). Toucher une ligne pour la fiche détaillée.</p>`;
 }
 
-function stabNote(s){
+// Concentrations Stabilis lisibles : associations « a / b » détaillées, « a >> b » = plage, « a et b » = 2 concentrations étudiées
+const COMBO = {amoxclav:["amoxicilline","ac. clavulanique"], piptazo:["pipéracilline","tazobactam"], bactrim:["sulfaméthoxazole","triméthoprime"]};
+function fmtConc(conc, id){
+  let c = String(conc || "").replace(/(\d)\.(\d)/g, "$1,$2").replace(/\s+/g, " ").trim();
+  const u = (c.match(/\s*(mg|µg|g)\/mL$/i) || ["", "mg"])[1] + "/mL";
+  const v = c.replace(/\s*(mg|µg|g)\/mL$/i, "");
+  let m = v.match(/^([\d,]+)\s*>>\s*([\d,]+)$/);
+  if (m) return `de ${m[1]} à ${m[2]} ${u}`;
+  m = v.match(/^([\d,]+)\s*\/\s*([\d,]+)$/);
+  if (m && COMBO[id]) return `${COMBO[id][0]} ${m[1]} ${u} + ${COMBO[id][1]} ${m[2]} ${u}`;
+  return c.replace(/ et /g, " ou ");
+}
+function stabNote(s, id){
   if (!s) return "";
   const c = s.cont;
-  const note = c ? `${c.ok ? "" : "≈ "}${esc(c.min)} <span class="slab">(${esc(c.cmin)})</span>${c.max ? ` · jusqu’à ${esc(c.max)} selon concentration` : ""}` : "pas de donnée";
+  const note = c ? `${c.ok ? "" : "≈ "}${esc(c.min)} <span class="slab">(${esc(fmtConc(c.cmin, id))})</span>${c.max ? ` · jusqu’à ${esc(c.max)} selon concentration` : ""}` : "pas de donnée";
   return `<div class="stab"><span class="slab">Stabilité seringue PP · 25 °C · lumière :</span> <b>${note}</b>${c && c.cav ? `<div class="scav">Donnée approchée : ${esc(c.cav)}</div>` : ""}</div>`;
 }
-function stabDetails(s){
+function stabDetails(s, id){
   if (!s) return "";
   const tbl = (m, title) => {
     if (!m) return `<h3>${title}</h3><p class="msg">Pas de donnée Stabilis exploitable (NaCl 0,9 % ou G5 %, 20–28 °C).</p>`;
     const showCont = m.cav && /contenant/.test(m.cav);
     return `<h3>${title}</h3>${m.cav ? `<p class="warn">Donnée approchée : ${esc(m.cav)}</p>` : ""}<table class="st"><tr><th>Concentration</th><th>Soluté</th><th>Durée</th><th>Conditions</th></tr>` +
-      m.rows.map(r => `<tr><td>${esc(r.conc)}</td><td>${esc(r.solv)}</td><td><b>${esc(r.dur)}</b></td><td class="k2">${esc(r.temp)} · ${esc(r.light)}${showCont ? " · " + esc(r.cont) : ""} · réf. ${esc(r.ref)}${r.niv ? " (" + esc(r.niv) + ")" : ""}</td></tr>`).join("") + `</table>`;
+      m.rows.map(r => `<tr><td>${esc(fmtConc(r.conc, id))}</td><td>${esc(r.solv)}</td><td><b>${esc(r.dur)}</b></td><td class="k2">${esc(r.temp)} · ${esc(r.light)}${showCont ? " · " + esc(r.cont) : ""} · réf. ${esc(r.ref)}${r.niv ? " (" + esc(r.niv) + ")" : ""}</td></tr>`).join("") + `</table>`;
   };
   const inc = s.inc && s.inc.length
     ? `<div class="txt">${s.inc.map(x => esc(x.p) + (x.t ? ` <span class="muted">(${esc(x.t)})</span>` : "") + (x.d ? "*" : "")).join(" · ")}</div><p class="meta">* résultats discordants : compatible dans d’autres études.</p>`
     : `<p class="msg">Aucune incompatibilité répertoriée.</p>`;
-  return `<details class="sdet"><summary>Stabilité et incompatibilités (Stabilis)</summary>${tbl(s.cont, "Perfusion continue — seringue polypropylène")}${tbl(s.disc, "Perfusion discontinue — poche PVC")}<h3>Incompatibilités en Y</h3>${inc}<p class="meta">Source : Stabilis (stabilis.org), monographie(s) n° ${esc(s.src.join(", "))}, consulté le ${esc(D.stabConsult || "")}. Critères : 20–28 °C, exposition à la lumière, NaCl 0,9 % ou G5 %. Niveau de preuve Stabilis entre parenthèses.</p></details>`;
+  return `<details class="sdet"><summary>Stabilité et incompatibilités (Stabilis)</summary>${tbl(s.cont, "Perfusion continue — seringue polypropylène")}${tbl(s.disc, "Perfusion discontinue — poche PVC")}<h3>Incompatibilités en Y</h3>${inc}<p class="meta">Concentrations : « de X à Y » = plage étudiée ; « X ou Y » = deux concentrations étudiées avec le même résultat. Source : Stabilis (stabilis.org), monographie(s) n° ${esc(s.src.join(", "))}, consulté le ${esc(D.stabConsult || "")}. Critères : 20–28 °C, exposition à la lumière, NaCl 0,9 % ou G5 %. Niveau de preuve Stabilis entre parenthèses.</p></details>`;
 }
 // ---------- Commentaires GPR regroupés par thème ----------
 const COMCATS = [["reco","Recommandations"],["pk","Données PK"],["irc","Insuffisance rénale chronique"],["hd","Hémodialyse"],["eer","Épuration extrarénale continue"],["autre","Autres données"]];
@@ -345,7 +357,7 @@ function renderFiche(drug, dfg){
     <div class="profile" style="margin-top:6px">${esc(profileLine(dfg))}</div>
     <div class="big">${p ? esc(p.txt) : "Renseigner la fonction rénale"}</div>
     ${comProf}
-    ${stabNote(drug.stab)}${stabDetails(drug.stab)}
+    ${stabNote(drug.stab, drug.id)}${stabDetails(drug.stab, drug.id)}
     ${block("Posologie usuelle (adulte normorénal)", f.usuelle)}
     <h3>Adaptation selon la fonction rénale</h3>${tbl}
     ${block("Moment d’administration / dialyse (chronoposologie)", f.chrono)}
